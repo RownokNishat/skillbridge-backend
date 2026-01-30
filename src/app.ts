@@ -1,16 +1,20 @@
 import express, { Application } from "express";
-import { postRouter } from "./modules/post/post.router";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import cors from 'cors';
-import { commentRouter } from "./modules/comment/comment.router";
 import errorHandler from "./middlewares/globalErrorHandler";
 import { notFound } from "./middlewares/notFound";
+
+import { UserRouter } from "./modules/user/user.router";
+import { TutorRouter } from "./modules/tutor/tutor.router";
+import { BookingRouter } from "./modules/booking/booking.router";
+import { CategoryRouter } from "./modules/category/category.router";
+import { ReviewRouter } from "./modules/review/review.router";
 
 const app: Application = express();
 
 app.use(cors({
-    origin: process.env.APP_URL || "http://localhost:4000", // client side url
+    origin: process.env.APP_URL || "http://localhost:3000",
     credentials: true
 }))
 
@@ -18,12 +22,16 @@ app.use(express.json());
 
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
-app.use("/posts", postRouter);
-app.use("/comments", commentRouter);
+app.use("/api", UserRouter);
+app.use("/api", TutorRouter);
+app.use("/api/bookings", BookingRouter);
+app.use("/api", CategoryRouter);
+app.use("/api/reviews", ReviewRouter);
 
 app.get("/", (req, res) => {
-    res.send("Hello, World!");
+    res.send("SkillBridge API Ready with Better-Auth");
 });
+
 app.use(notFound)
 app.use(errorHandler)
 

@@ -2,7 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { auth as betterAuth } from '../lib/auth'
 
 export enum UserRole {
-    USER = "USER",
+    STUDENT = "STUDENT",
+    TUTOR = "TUTOR",
     ADMIN = "ADMIN"
 }
 
@@ -25,7 +26,7 @@ const auth = (...roles: UserRole[]) => {
         try {
             // get user session
             const session = await betterAuth.api.getSession({
-                headers: req.headers as any
+                headers: req.headers
             })
 
             if (!session) {

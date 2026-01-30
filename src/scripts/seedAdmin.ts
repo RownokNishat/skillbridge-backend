@@ -1,17 +1,17 @@
 import { prisma } from "../lib/prisma";
+import { auth } from "../lib/auth";
 import { UserRole } from "../middlewares/auth";
 
 async function seedAdmin() {
     try {
-        console.log("***** Admin Seeding Started....")
+        console.log("***** Admin Seeding Started....");
         const adminData = {
-            name: "Admin2 Saheb",
-            email: "admin2@admin.com",
+            name: "Admin",
+            email: "admin@skillbridge.com",
             role: UserRole.ADMIN,
-            password: "admin1234"
-        }
-        console.log("***** Checking Admin Exist or not")
-        // check user exist on db or not
+            password: "admin123"
+        };
+        
         const existingUser = await prisma.user.findUnique({
             where: {
                 email: adminData.email
@@ -19,37 +19,32 @@ async function seedAdmin() {
         });
 
         if (existingUser) {
-            throw new Error("User already exists!!");
+            console.log("Admin already exists!");
+            return;
         }
 
-        const signUpAdmin = await fetch("http://localhost:3000/api/auth/sign-up/email", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(adminData)
-        })
+        const res = await auth.api.signUpEmail({
+            body: {
+                email: adminData.email,
+                password: adminData.password,
+                name: adminData.name,
+                role: adminData.role
+            }
+        });
 
-
-
-        if (signUpAdmin.ok) {
-            console.log("**** Admin created")
-            await prisma.user.update({
-                where: {
-                    email: adminData.email
-                },
-                data: {
-                    emailVerified: true
-                }
-            })
-
-            console.log("**** Email verification status updated!")
+        if (res) {
+             console.log("******* Admin created successfully ******");
+             // Manually verify email
+             await prisma.user.update({
+                 where: { email: adminData.email },
+                 data: { emailVerified: true }
+             });
+             console.log("******* Admin verified successfully ******");
         }
-        console.log("******* SUCCESS ******")
 
     } catch (error) {
         console.error(error);
     }
 }
 
-seedAdmin()
+seedAdmin();

@@ -155,6 +155,22 @@ const getDashboard = async (req: Request, res: Response) => {
   }
 };
 
+const getFeaturedTutors = async (_req: Request, res: Response) => {
+  try {
+    const result = await TutorService.getFeaturedTutors();
+    res.status(200).json({
+      success: true,
+      message: "Featured tutors retrieved successfully",
+      data: result,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message || "Something went wrong",
+    });
+  }
+};
+
 export const TutorController = {
   getAllTutors,
   getTutorById,
@@ -164,4 +180,5 @@ export const TutorController = {
   getMySessions,
   markSessionComplete,
   getDashboard,
+  getFeaturedTutors,
 };

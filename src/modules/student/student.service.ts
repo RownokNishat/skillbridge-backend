@@ -1,0 +1,111 @@
+import { prisma } from "../../lib/prisma";
+
+const getMyProfile = async (userId: string) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            phone: true,
+            createdAt: true,
+            updatedAt: true
+        }
+    });
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    // Get booking statistics
+    const totalBookings = await prisma.booking.count({
+        where: { studentId: userId }
+    });
+
+    const completedBookings = await prisma.booking.count({
+        where: {
+            studentId: userId,
+            status: "COMPLETED"
+        }
+    });
+
+    const upcomingBookings = await prisma.booking.count({
+        where: {
+            studentId: userId,
+            status: {
+                in: ["PENDING", "CONFIRMED"]
+            },
+            startTime: {
+                gte: new Date()
+            }
+        }
+    });
+
+    // Get reviews given
+    const reviewsGiven = await prisma.review.count({
+        where: { studentId: userId }
+    });
+
+    return {
+        ...user,
+        stats: {
+            totalBookings,
+            completedBookings,
+            upcomingBookings,
+            reviewsGiven
+        }
+    };
+};
+
+const updateProfile = async (userId: string, payload: any) => {
+    // Validate that user exists and is a student
+    const user = await prisma.user.findUnique({
+        where: { id: userId }
+    });
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    if (user.role !== "STUDENT") {
+        throw new Error("Only students can update their profile using this endpoint");
+    }
+
+    // Prepare update data (only allow specific fields)
+    const updateData: any = {};
+
+    if (payload.name !== undefined) {
+        updateData.name = payload.name;
+    }
+
+    if (payload.phone !== undefined) {
+        updateData.phone = payload.phone;
+    }
+
+    if (payload.image !== undefined) {
+        updateData.image = payload.image;
+    }
+
+    // Update user profile
+    const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: updateData,
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            phone: true,
+            createdAt: true,
+            updatedAt: true
+        }
+    });
+
+    return updatedUser;
+};
+
+export const StudentService = {
+    getMyProfile,
+    updateProfile
+};

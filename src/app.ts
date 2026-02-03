@@ -12,6 +12,7 @@ import { CategoryRouter } from "./modules/category/category.router";
 import { ReviewRouter } from "./modules/review/review.router";
 import { AuthRouter } from "./modules/auth/auth.router";
 import { RegistrationRouter } from "./modules/registration/registration.router";
+import { StudentRouter } from "./modules/student/student.router";
 
 const app: Application = express();
 
@@ -30,7 +31,8 @@ app.use("/api", RegistrationRouter);
 app.use("/api", AuthRouter);
 app.use("/api", UserRouter);
 app.use("/api", TutorRouter);
-app.use("/api/admin/bookings", BookingRouter);
+app.use("/api", StudentRouter);
+app.use("/api/bookings", BookingRouter);
 app.use("/api", CategoryRouter);
 app.use("/api/reviews", ReviewRouter);
 

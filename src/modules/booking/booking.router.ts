@@ -10,5 +10,15 @@ router.get(
   auth(UserRole.ADMIN, UserRole.STUDENT, UserRole.TUTOR),
   BookingController.getMyBookings,
 );
+router.get(
+  "/:id",
+  auth(UserRole.STUDENT, UserRole.TUTOR),
+  BookingController.getBookingById,
+);
+router.patch(
+  "/:id/cancel",
+  auth(UserRole.STUDENT, UserRole.TUTOR),
+  BookingController.cancelBooking,
+);
 
 export const BookingRouter = router;

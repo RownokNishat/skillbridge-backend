@@ -1,412 +1,490 @@
 import { prisma } from "../../lib/prisma";
 
 const getAllTutors = async (query: any) => {
-    const { searchTerm, minPrice, maxPrice, categoryId } = query;
+  // 1. Destructure parameters to match Frontend "TutorFilters"
+  const {
+    search,
+    categoryId,
+    minRate,
+    maxRate,
+    minRating,
+    sortBy,
+    sortOrder = "desc",
+  } = query;
 
-    const where: any = {};
+  const where: any = {};
 
-    if (minPrice || maxPrice) {
-        where.hourlyRate = {};
-        if (minPrice) where.hourlyRate.gte = Number(minPrice);
-        if (maxPrice) where.hourlyRate.lte = Number(maxPrice);
-    }
+  // 2. Filter by Price (hourlyRate)
+  if (minRate || maxRate) {
+    where.hourlyRate = {};
+    if (minRate) where.hourlyRate.gte = Number(minRate);
+    if (maxRate) where.hourlyRate.lte = Number(maxRate);
+  }
 
-    if (categoryId) {
-        where.categories = {
-            some: {
-                id: Number(categoryId)
-            }
-        };
-    }
+  // 3. Filter by Category
+  if (categoryId) {
+    where.categories = {
+      some: {
+        id: Number(categoryId),
+      },
+    };
+  }
 
-    if (searchTerm) {
-        where.OR = [
-            { bio: { contains: searchTerm, mode: 'insensitive' } },
-            { user: { name: { contains: searchTerm, mode: 'insensitive' } } }
-        ];
-    }
+  // 4. Search by Name or Bio
+  if (search) {
+    where.OR = [
+      { bio: { contains: search, mode: "insensitive" } },
+      { user: { name: { contains: search, mode: "insensitive" } } },
+    ];
+  }
 
-    const tutors = await prisma.tutorProfile.findMany({
-        where,
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    image: true
-                }
-            },
-            categories: true,
-            _count: {
-                select: {
-                    user: {
-                        select: {
-                            receivedReviews: true
-                        }
-                    }
-                }
-            }
+  // 5. Determine Database Sorting
+  // We can sort by price or experience directly in the DB.
+  // Sorting by 'rating' must happen after fetching since it's a calculated field.
+  let orderBy: any = { createdAt: "desc" }; // Default sort
+
+  if (sortBy === "price") {
+    orderBy = { hourlyRate: sortOrder };
+  } else if (sortBy === "experience") {
+    orderBy = { experience: sortOrder };
+  }
+
+  // 6. Execute Query
+  const tutors = await prisma.tutorProfile.findMany({
+    where,
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
         },
-        orderBy: {
-            createdAt: 'desc'
-        }
-    });
+      },
+      categories: true,
+      // Removed the faulty _count block here
+    },
+    orderBy,
+  });
 
-    // Calculate average rating for each tutor
-    const tutorsWithRatings = await Promise.all(
-        tutors.map(async (tutor) => {
-            const reviews = await prisma.review.findMany({
-                where: { tutorId: tutor.userId },
-                select: { rating: true }
-            });
+  // 7. Calculate Ratings & Process Results
+  let tutorsWithRatings = await Promise.all(
+    tutors.map(async (tutor) => {
+      const reviews = await prisma.review.findMany({
+        where: { tutorId: tutor.userId },
+        select: { rating: true },
+      });
 
-            const averageRating = reviews.length > 0
-                ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
-                : 0;
+      const averageRating =
+        reviews.length > 0
+          ? reviews.reduce((sum, review) => sum + review.rating, 0) /
+            reviews.length
+          : 0;
 
-            return {
-                ...tutor,
-                averageRating: Number(averageRating.toFixed(1)),
-                totalReviews: reviews.length
-            };
-        })
+      return {
+        ...tutor,
+        averageRating: Number(averageRating.toFixed(1)),
+        totalReviews: reviews.length,
+      };
+    }),
+  );
+
+  // 8. Filter by Min Rating (In-Memory)
+  if (minRating) {
+    const minRatingVal = Number(minRating);
+    tutorsWithRatings = tutorsWithRatings.filter(
+      (tutor) => tutor.averageRating >= minRatingVal,
     );
+  }
 
-    return tutorsWithRatings;
+  // 9. Sort by Rating (In-Memory)
+  // Only needed if sortBy is 'rating', as other sorts were handled by Prisma
+  if (sortBy === "rating") {
+    tutorsWithRatings.sort((a, b) => {
+      if (sortOrder === "asc") {
+        return a.averageRating - b.averageRating;
+      } else {
+        return b.averageRating - a.averageRating;
+      }
+    });
+  }
+
+  return tutorsWithRatings;
 };
 
+// ... keep getTutorById and other methods as they are ...
+
 const getTutorById = async (id: string) => {
-    const tutor = await prisma.tutorProfile.findFirst({
-        where: { userId: id },
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    image: true
-                }
-            },
-            categories: true
-        }
-    });
-
-    if (!tutor) {
-        throw new Error("Tutor profile not found");
-    }
-
-    // Get reviews with student details
-    const reviews = await prisma.review.findMany({
-        where: { tutorId: id },
-        include: {
-            student: {
-                select: {
-                    id: true,
-                    name: true,
-                    image: true
-                }
-            }
+  // ... existing implementation ...
+  const tutor = await prisma.tutorProfile.findFirst({
+    where: { userId: id },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
         },
-        orderBy: { createdAt: 'desc' }
-    });
+      },
+      categories: true,
+    },
+  });
 
-    const averageRating = reviews.length > 0
-        ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
-        : 0;
+  if (!tutor) {
+    throw new Error("Tutor profile not found");
+  }
 
-    return {
-        ...tutor,
-        reviews,
-        averageRating: Number(averageRating.toFixed(1)),
-        totalReviews: reviews.length
-    };
+  const reviews = await prisma.review.findMany({
+    where: { tutorId: id },
+    include: {
+      student: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      : 0;
+
+  return {
+    ...tutor,
+    reviews,
+    averageRating: Number(averageRating.toFixed(1)),
+    totalReviews: reviews.length,
+  };
 };
 
 const getMyProfile = async (userId: string) => {
-    const profile = await prisma.tutorProfile.findUnique({
-        where: { userId },
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    image: true,
-                    phone: true
-                }
-            },
-            categories: true
-        }
-    });
-
-    return profile;
+  const profile = await prisma.tutorProfile.findUnique({
+    where: { userId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          phone: true,
+        },
+      },
+      categories: true,
+    },
+  });
+  return profile;
 };
 
 const updateProfile = async (userId: string, payload: any) => {
-    const existing = await prisma.tutorProfile.findUnique({
-        where: { userId }
-    });
+  const existing = await prisma.tutorProfile.findUnique({
+    where: { userId },
+  });
 
-    const data: any = {
-        bio: payload.bio,
-        hourlyRate: payload.hourlyRate ? Number(payload.hourlyRate) : undefined,
-        experience: payload.experience ? Number(payload.experience) : undefined,
-        availability: payload.availability
+  const data: any = {
+    bio: payload.bio,
+    hourlyRate: payload.hourlyRate ? Number(payload.hourlyRate) : undefined,
+    experience: payload.experience ? Number(payload.experience) : undefined,
+    availability: payload.availability,
+  };
+
+  Object.keys(data).forEach(
+    (key) => data[key] === undefined && delete data[key],
+  );
+
+  if (payload.categoryIds && Array.isArray(payload.categoryIds)) {
+    data.categories = {
+      set: payload.categoryIds.map((id: number) => ({ id })),
+    };
+  }
+
+  if (existing) {
+    return await prisma.tutorProfile.update({
+      where: { userId },
+      data,
+      include: {
+        categories: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+  } else {
+    const createData: any = {
+      userId,
+      bio: payload.bio || "",
+      hourlyRate: payload.hourlyRate ? Number(payload.hourlyRate) : 0,
+      experience: payload.experience ? Number(payload.experience) : 0,
+      availability: payload.availability || "{}",
     };
 
-    // Remove undefined fields
-    Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
-
-    // Handle category connections
     if (payload.categoryIds && Array.isArray(payload.categoryIds)) {
-        data.categories = {
-            set: payload.categoryIds.map((id: number) => ({ id }))
-        };
+      createData.categories = {
+        connect: payload.categoryIds.map((id: number) => ({ id })),
+      };
     }
 
-    if (existing) {
-        return await prisma.tutorProfile.update({
-            where: { userId },
-            data,
-            include: {
-                categories: true,
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true
-                    }
-                }
-            }
-        });
-    } else {
-        // Create new profile
-        const createData: any = {
-            userId,
-            bio: payload.bio || '',
-            hourlyRate: payload.hourlyRate ? Number(payload.hourlyRate) : 0,
-            experience: payload.experience ? Number(payload.experience) : 0,
-            availability: payload.availability || '{}'
-        };
-
-        if (payload.categoryIds && Array.isArray(payload.categoryIds)) {
-            createData.categories = {
-                connect: payload.categoryIds.map((id: number) => ({ id }))
-            };
-        }
-
-        return await prisma.tutorProfile.create({
-            data: createData,
-            include: {
-                categories: true,
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true
-                    }
-                }
-            }
-        });
-    }
+    return await prisma.tutorProfile.create({
+      data: createData,
+      include: {
+        categories: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
 };
 
 const updateAvailability = async (userId: string, availability: any) => {
-    const existing = await prisma.tutorProfile.findUnique({
-        where: { userId }
-    });
+  const existing = await prisma.tutorProfile.findUnique({
+    where: { userId },
+  });
 
-    if (!existing) {
-        throw new Error("Tutor profile not found. Please create your profile first.");
-    }
+  if (!existing) {
+    throw new Error(
+      "Tutor profile not found. Please create your profile first.",
+    );
+  }
 
-    // Convert to JSON string if it's an object
-    const availabilityString = typeof availability === 'string'
-        ? availability
-        : JSON.stringify(availability);
+  const availabilityString =
+    typeof availability === "string"
+      ? availability
+      : JSON.stringify(availability);
 
-    return await prisma.tutorProfile.update({
-        where: { userId },
-        data: { availability: availabilityString },
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true
-                }
-            }
-        }
-    });
+  return await prisma.tutorProfile.update({
+    where: { userId },
+    data: { availability: availabilityString },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
 };
 
 const getMySessions = async (userId: string, query: any) => {
-    const { status } = query;
-
-    const where: any = {
-        tutorId: userId
-    };
-
-    if (status) {
-        where.status = status.toUpperCase();
-    }
-
-    const sessions = await prisma.booking.findMany({
-        where,
-        include: {
-            student: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    image: true
-                }
-            }
+  const { status } = query;
+  const where: any = {
+    tutorId: userId,
+  };
+  if (status) {
+    where.status = status.toUpperCase();
+  }
+  const sessions = await prisma.booking.findMany({
+    where,
+    include: {
+      student: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
         },
-        orderBy: {
-            startTime: 'desc'
-        }
-    });
-
-    return sessions;
+      },
+    },
+    orderBy: {
+      startTime: "desc",
+    },
+  });
+  return sessions;
 };
 
 const markSessionComplete = async (userId: string, bookingId: number) => {
-    const booking = await prisma.booking.findUnique({
-        where: { id: bookingId }
-    });
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+  });
 
-    if (!booking) {
-        throw new Error("Booking not found");
-    }
+  if (!booking) {
+    throw new Error("Booking not found");
+  }
 
-    if (booking.tutorId !== userId) {
-        throw new Error("You are not authorized to update this booking");
-    }
+  if (booking.tutorId !== userId) {
+    throw new Error("You are not authorized to update this booking");
+  }
 
-    if (booking.status !== 'CONFIRMED') {
-        throw new Error("Only confirmed bookings can be marked as completed");
-    }
+  if (booking.status !== "CONFIRMED") {
+    throw new Error("Only confirmed bookings can be marked as completed");
+  }
 
-    return await prisma.booking.update({
-        where: { id: bookingId },
-        data: { status: 'COMPLETED' },
-        include: {
-            student: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true
-                }
-            }
-        }
-    });
+  return await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: "COMPLETED" },
+    include: {
+      student: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
 };
 
 const getDashboardStats = async (userId: string) => {
-    // Get total sessions
-    const totalSessions = await prisma.booking.count({
-        where: { tutorId: userId }
-    });
+  const totalSessions = await prisma.booking.count({
+    where: { tutorId: userId },
+  });
+  const completedSessions = await prisma.booking.count({
+    where: {
+      tutorId: userId,
+      status: "COMPLETED",
+    },
+  });
+  const upcomingSessions = await prisma.booking.count({
+    where: {
+      tutorId: userId,
+      status: "CONFIRMED",
+      startTime: {
+        gte: new Date(),
+      },
+    },
+  });
+  const pendingSessions = await prisma.booking.count({
+    where: {
+      tutorId: userId,
+      status: "PENDING",
+    },
+  });
+  const reviews = await prisma.review.findMany({
+    where: { tutorId: userId },
+    select: { rating: true },
+  });
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      : 0;
 
-    // Get completed sessions
-    const completedSessions = await prisma.booking.count({
-        where: {
-            tutorId: userId,
-            status: 'COMPLETED'
-        }
-    });
-
-    // Get upcoming sessions
-    const upcomingSessions = await prisma.booking.count({
-        where: {
-            tutorId: userId,
-            status: 'CONFIRMED',
-            startTime: {
-                gte: new Date()
-            }
-        }
-    });
-
-    // Get pending sessions
-    const pendingSessions = await prisma.booking.count({
-        where: {
-            tutorId: userId,
-            status: 'PENDING'
-        }
-    });
-
-    // Get reviews
-    const reviews = await prisma.review.findMany({
-        where: { tutorId: userId },
-        select: { rating: true }
-    });
-
-    const averageRating = reviews.length > 0
-        ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
-        : 0;
-
-    // Get recent sessions
-    const recentSessions = await prisma.booking.findMany({
-        where: { tutorId: userId },
-        include: {
-            student: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    image: true
-                }
-            }
-        },
-        orderBy: {
-            startTime: 'desc'
-        },
-        take: 5
-    });
-
-    // Calculate total earnings (completed sessions)
-    const completedBookings = await prisma.booking.findMany({
-        where: {
-            tutorId: userId,
-            status: 'COMPLETED'
-        },
+  const recentSessions = await prisma.booking.findMany({
+    where: { tutorId: userId },
+    include: {
+      student: {
         select: {
-            startTime: true,
-            endTime: true
-        }
-    });
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+    },
+    orderBy: {
+      startTime: "desc",
+    },
+    take: 5,
+  });
 
-    const tutorProfile = await prisma.tutorProfile.findUnique({
-        where: { userId }
-    });
+  const completedBookings = await prisma.booking.findMany({
+    where: {
+      tutorId: userId,
+      status: "COMPLETED",
+    },
+    select: {
+      startTime: true,
+      endTime: true,
+    },
+  });
 
-    const hourlyRate = tutorProfile?.hourlyRate || 0;
-    const totalEarnings = completedBookings.reduce((sum, booking) => {
-        const hours = (booking.endTime.getTime() - booking.startTime.getTime()) / (1000 * 60 * 60);
-        return sum + (hours * hourlyRate);
-    }, 0);
+  const tutorProfile = await prisma.tutorProfile.findUnique({
+    where: { userId },
+  });
 
-    return {
-        totalSessions,
-        completedSessions,
-        upcomingSessions,
-        pendingSessions,
-        totalReviews: reviews.length,
+  const hourlyRate = tutorProfile?.hourlyRate || 0;
+  const totalEarnings = completedBookings.reduce((sum, booking) => {
+    const hours =
+      (booking.endTime.getTime() - booking.startTime.getTime()) /
+      (1000 * 60 * 60);
+    return sum + hours * hourlyRate;
+  }, 0);
+
+  return {
+    totalSessions,
+    completedSessions,
+    upcomingSessions,
+    pendingSessions,
+    totalReviews: reviews.length,
+    averageRating: Number(averageRating.toFixed(1)),
+    totalEarnings: Number(totalEarnings.toFixed(2)),
+    recentSessions,
+  };
+};
+
+const getFeaturedTutors = async () => {
+  const tutors = await prisma.tutorProfile.findMany({
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+      categories: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  const tutorsWithRatings = await Promise.all(
+    tutors.map(async (tutor) => {
+      const reviews = await prisma.review.findMany({
+        where: { tutorId: tutor.userId },
+        select: { rating: true },
+      });
+
+      const averageRating =
+        reviews.length > 0
+          ? reviews.reduce((sum, review) => sum + review.rating, 0) /
+            reviews.length
+          : 0;
+
+      return {
+        ...tutor,
         averageRating: Number(averageRating.toFixed(1)),
-        totalEarnings: Number(totalEarnings.toFixed(2)),
-        recentSessions
-    };
+        totalReviews: reviews.length,
+      };
+    }),
+  );
+
+  const featuredTutors = tutorsWithRatings
+    .sort((a, b) => {
+      if (b.averageRating !== a.averageRating) {
+        return b.averageRating - a.averageRating;
+      }
+      return b.totalReviews - a.totalReviews;
+    })
+    .slice(0, 6);
+
+  return featuredTutors;
 };
 
 export const TutorService = {
-    getAllTutors,
-    getTutorById,
-    getMyProfile,
-    updateProfile,
-    updateAvailability,
-    getMySessions,
-    markSessionComplete,
-    getDashboardStats
-}
+  getAllTutors,
+  getTutorById,
+  getMyProfile,
+  updateProfile,
+  updateAvailability,
+  getMySessions,
+  markSessionComplete,
+  getDashboardStats,
+  getFeaturedTutors,
+};

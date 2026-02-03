@@ -5,6 +5,7 @@ import auth, { UserRole } from '../../middlewares/auth';
 const router = express.Router();
 
 // Public routes
+router.get('/tutors/featured', TutorController.getFeaturedTutors);
 router.get('/tutors', TutorController.getAllTutors);
 router.get('/tutors/:id', TutorController.getTutorById);
 

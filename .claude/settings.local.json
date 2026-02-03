@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(curl:*)",
-      "Bash(npm run seed:*)"
+      "Bash(npm run seed:*)",
+      "Bash(pnpm install:*)"
     ]
   }
 }

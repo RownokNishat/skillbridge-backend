@@ -10,6 +10,7 @@ import { TutorRouter } from "./modules/tutor/tutor.router";
 import { BookingRouter } from "./modules/booking/booking.router";
 import { CategoryRouter } from "./modules/category/category.router";
 import { ReviewRouter } from "./modules/review/review.router";
+import { AuthRouter } from "./modules/auth/auth.router";
 
 const app: Application = express();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
+app.use("/api", AuthRouter);
 app.use("/api", UserRouter);
 app.use("/api", TutorRouter);
 app.use("/api/bookings", BookingRouter);

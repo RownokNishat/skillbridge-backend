@@ -477,6 +477,40 @@ const getFeaturedTutors = async () => {
   return featuredTutors;
 };
 
+const acceptSession = async (userId: string, bookingId: number) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+  });
+
+  if (!booking) throw new Error("Booking not found");
+  if (booking.tutorId !== userId) throw new Error("Unauthorized");
+  if (booking.status !== "PENDING")
+    throw new Error("Only pending sessions can be accepted");
+
+  return await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: "CONFIRMED" },
+    include: { student: { select: { id: true, name: true, email: true } } },
+  });
+};
+
+const cancelSession = async (userId: string, bookingId: number) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+  });
+
+  if (!booking) throw new Error("Booking not found");
+  if (booking.tutorId !== userId) throw new Error("Unauthorized");
+  if (booking.status === "COMPLETED")
+    throw new Error("Cannot cancel completed sessions");
+
+  return await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: "CANCELLED" },
+    include: { student: { select: { id: true, name: true, email: true } } },
+  });
+};
+
 export const TutorService = {
   getAllTutors,
   getTutorById,
@@ -487,4 +521,6 @@ export const TutorService = {
   markSessionComplete,
   getDashboardStats,
   getFeaturedTutors,
+  acceptSession,
+  cancelSession,
 };

@@ -171,6 +171,34 @@ const getFeaturedTutors = async (_req: Request, res: Response) => {
   }
 };
 
+const acceptSession = async (req: Request, res: Response) => {
+  try {
+    const bookingId = parseInt(req.params.id);
+    const result = await TutorService.acceptSession(req.user!.id, bookingId);
+    res.status(200).json({
+      success: true,
+      message: "Session accepted successfully",
+      data: result,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const cancelSession = async (req: Request, res: Response) => {
+  try {
+    const bookingId = parseInt(req.params.id);
+    const result = await TutorService.cancelSession(req.user!.id, bookingId);
+    res.status(200).json({
+      success: true,
+      message: "Session cancelled",
+      data: result,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 export const TutorController = {
   getAllTutors,
   getTutorById,
@@ -181,4 +209,6 @@ export const TutorController = {
   markSessionComplete,
   getDashboard,
   getFeaturedTutors,
+  acceptSession,
+  cancelSession,
 };

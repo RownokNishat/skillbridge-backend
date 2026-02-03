@@ -212,7 +212,7 @@ const updateProfile = async (userId: string, payload: any) => {
     }
 };
 
-const updateAvailability = async (userId: string, availability: string) => {
+const updateAvailability = async (userId: string, availability: any) => {
     const existing = await prisma.tutorProfile.findUnique({
         where: { userId }
     });
@@ -221,9 +221,14 @@ const updateAvailability = async (userId: string, availability: string) => {
         throw new Error("Tutor profile not found. Please create your profile first.");
     }
 
+    // Convert to JSON string if it's an object
+    const availabilityString = typeof availability === 'string'
+        ? availability
+        : JSON.stringify(availability);
+
     return await prisma.tutorProfile.update({
         where: { userId },
-        data: { availability },
+        data: { availability: availabilityString },
         include: {
             user: {
                 select: {

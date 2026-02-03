@@ -36,12 +36,7 @@ const auth = (...roles: UserRole[]) => {
                 })
             }
 
-            if (!session.user.emailVerified) {
-                return res.status(403).json({
-                    success: false,
-                    message: "Email verification required. Please verfiy your email!"
-                })
-            }
+            // Email verification removed - users can access immediately after registration
 
             req.user = {
                 id: session.user.id,

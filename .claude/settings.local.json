@@ -7,7 +7,8 @@
       "Bash(pnpm approve-builds:*)",
       "Bash(npx prisma generate:*)",
       "Bash(node -e \"require\\(''child_process''\\).execSync\\(''pnpm rebuild @prisma/engines prisma @prisma/client'', {stdio: ''inherit''}\\)\")",
-      "Bash(pnpm list:*)"
+      "Bash(pnpm list:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

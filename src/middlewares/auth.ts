@@ -4,7 +4,8 @@ import { auth as betterAuth } from '../lib/auth'
 export enum UserRole {
     STUDENT = "STUDENT",
     TUTOR = "TUTOR",
-    ADMIN = "ADMIN"
+    ADMIN = "ADMIN",
+    USER = "USER"
 }
 
 declare global {
@@ -26,7 +27,7 @@ const auth = (...roles: UserRole[]) => {
         try {
             // get user session
             const session = await betterAuth.api.getSession({
-                headers: req.headers
+                headers: req.headers as any
             })
 
             if (!session) {

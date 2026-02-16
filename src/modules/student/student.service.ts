@@ -18,7 +18,6 @@ const getMyProfile = async (userId: string) => {
         throw new Error("User not found");
     }
 
-    // Get booking statistics
     const totalBookings = await prisma.booking.count({
         where: { studentId: userId }
     });
@@ -33,16 +32,13 @@ const getMyProfile = async (userId: string) => {
     const upcomingBookings = await prisma.booking.count({
         where: {
             studentId: userId,
-            status: {
-                in: ["PENDING", "CONFIRMED"]
-            },
+            status: "CONFIRMED",
             startTime: {
                 gte: new Date()
             }
         }
     });
 
-    // Get reviews given
     const reviewsGiven = await prisma.review.count({
         where: { studentId: userId }
     });
@@ -59,7 +55,6 @@ const getMyProfile = async (userId: string) => {
 };
 
 const updateProfile = async (userId: string, payload: any) => {
-    // Validate that user exists and is a student
     const user = await prisma.user.findUnique({
         where: { id: userId }
     });

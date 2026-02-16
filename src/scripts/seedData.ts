@@ -368,8 +368,8 @@ async function seedData() {
             if (students[bookingData.studentIndex] && tutors[bookingData.tutorIndex]) {
                 const existingBooking = await prisma.booking.findFirst({
                     where: {
-                        studentId: students[bookingData.studentIndex].id,
-                        tutorId: tutors[bookingData.tutorIndex].id,
+                        studentId: students[bookingData.studentIndex]!.id,
+                        tutorId: tutors[bookingData.tutorIndex]!.id,
                         startTime: bookingData.startTime
                     }
                 });
@@ -377,8 +377,8 @@ async function seedData() {
                 if (!existingBooking) {
                     await prisma.booking.create({
                         data: {
-                            studentId: students[bookingData.studentIndex].id,
-                            tutorId: tutors[bookingData.tutorIndex].id,
+                            studentId: students[bookingData.studentIndex]!.id,
+                            tutorId: tutors[bookingData.tutorIndex]!.id,
                             startTime: bookingData.startTime,
                             endTime: bookingData.endTime,
                             status: bookingData.status as any
@@ -424,16 +424,16 @@ async function seedData() {
             if (students[reviewData.studentIndex] && tutors[reviewData.tutorIndex]) {
                 const existingReview = await prisma.review.findFirst({
                     where: {
-                        studentId: students[reviewData.studentIndex].id,
-                        tutorId: tutors[reviewData.tutorIndex].id
+                        studentId: students[reviewData.studentIndex]!.id,
+                        tutorId: tutors[reviewData.tutorIndex]!.id
                     }
                 });
 
                 if (!existingReview) {
                     await prisma.review.create({
                         data: {
-                            studentId: students[reviewData.studentIndex].id,
-                            tutorId: tutors[reviewData.tutorIndex].id,
+                            studentId: students[reviewData.studentIndex]!.id,
+                            tutorId: tutors[reviewData.tutorIndex]!.id,
                             rating: reviewData.rating,
                             comment: reviewData.comment
                         }

@@ -35,7 +35,7 @@ const getAllCategories = async (req: Request, res: Response) => {
 
 const updateCategory = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id); // <--- Convert to Integer
+    const id = parseInt(req.params.id as string); // <--- Convert to Integer
 
     if (isNaN(id)) {
       res.status(400).json({ success: false, message: "Invalid ID format" });
@@ -58,7 +58,7 @@ const updateCategory = async (req: Request, res: Response) => {
 
 const deleteCategory = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id); // <--- Convert to Integer
+    const id = parseInt(req.params.id as string); // <--- Convert to Integer
 
     if (isNaN(id)) {
       res.status(400).json({ success: false, message: "Invalid ID format" });

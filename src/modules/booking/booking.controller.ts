@@ -66,7 +66,7 @@ const getMyBookings = async (req: Request, res: Response) => {
 
 const getBookingById = async (req: Request, res: Response) => {
   try {
-    const bookingId = parseInt(req.params.id);
+    const bookingId = parseInt(req.params.id as string);
 
     if (isNaN(bookingId)) {
       res.status(400).json({
@@ -101,7 +101,7 @@ const getBookingById = async (req: Request, res: Response) => {
 
 const cancelBooking = async (req: Request, res: Response) => {
   try {
-    const bookingId = parseInt(req.params.id);
+    const bookingId = parseInt(req.params.id as string);
 
     if (isNaN(bookingId)) {
       res.status(400).json({

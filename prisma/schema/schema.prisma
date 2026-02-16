@@ -154,3 +154,56 @@ model Review {
 
   @@map("reviews")
 }
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Post {
+  id          String       @id @default(cuid())
+  title       String
+  content     String
+  excerpt     String?
+  coverImage  String?
+  tags        String[]     @default([])
+  isFeatured  Boolean      @default(false)
+  status      PostStatus   @default(DRAFT)
+  views       Int          @default(0)
+  
+  authorId    String
+  
+  comments    Comment[]
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String         @id @default(cuid())
+  content   String
+  status    CommentStatus  @default(PENDING)
+  
+  postId    String
+  post      Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  authorId  String
+  
+  parentId  String?
+  parent    Comment?       @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[]      @relation("CommentReplies")
+  
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@map("comments")
+}

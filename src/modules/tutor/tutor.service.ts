@@ -1,7 +1,6 @@
 import { prisma } from "../../lib/prisma";
 
 const getAllTutors = async (query: any) => {
-  // 1. Destructure parameters to match Frontend "TutorFilters"
   const {
     search,
     categoryId,
@@ -14,14 +13,12 @@ const getAllTutors = async (query: any) => {
 
   const where: any = {};
 
-  // 2. Filter by Price (hourlyRate)
   if (minRate || maxRate) {
     where.hourlyRate = {};
     if (minRate) where.hourlyRate.gte = Number(minRate);
     if (maxRate) where.hourlyRate.lte = Number(maxRate);
   }
 
-  // 3. Filter by Category
   if (categoryId) {
     where.categories = {
       some: {
@@ -30,7 +27,6 @@ const getAllTutors = async (query: any) => {
     };
   }
 
-  // 4. Search by Name or Bio
   if (search) {
     where.OR = [
       { bio: { contains: search, mode: "insensitive" } },
@@ -38,10 +34,7 @@ const getAllTutors = async (query: any) => {
     ];
   }
 
-  // 5. Determine Database Sorting
-  // We can sort by price or experience directly in the DB.
-  // Sorting by 'rating' must happen after fetching since it's a calculated field.
-  let orderBy: any = { createdAt: "desc" }; // Default sort
+  let orderBy: any = { createdAt: "desc" };
 
   if (sortBy === "price") {
     orderBy = { hourlyRate: sortOrder };
@@ -49,7 +42,6 @@ const getAllTutors = async (query: any) => {
     orderBy = { experience: sortOrder };
   }
 
-  // 6. Execute Query
   const tutors = await prisma.tutorProfile.findMany({
     where,
     include: {
@@ -62,12 +54,10 @@ const getAllTutors = async (query: any) => {
         },
       },
       categories: true,
-      // Removed the faulty _count block here
     },
     orderBy,
   });
 
-  // 7. Calculate Ratings & Process Results
   let tutorsWithRatings = await Promise.all(
     tutors.map(async (tutor) => {
       const reviews = await prisma.review.findMany({
@@ -89,7 +79,6 @@ const getAllTutors = async (query: any) => {
     }),
   );
 
-  // 8. Filter by Min Rating (In-Memory)
   if (minRating) {
     const minRatingVal = Number(minRating);
     tutorsWithRatings = tutorsWithRatings.filter(
@@ -97,8 +86,6 @@ const getAllTutors = async (query: any) => {
     );
   }
 
-  // 9. Sort by Rating (In-Memory)
-  // Only needed if sortBy is 'rating', as other sorts were handled by Prisma
   if (sortBy === "rating") {
     tutorsWithRatings.sort((a, b) => {
       if (sortOrder === "asc") {
@@ -112,10 +99,7 @@ const getAllTutors = async (query: any) => {
   return tutorsWithRatings;
 };
 
-// ... keep getTutorById and other methods as they are ...
-
 const getTutorById = async (id: string) => {
-  // ... existing implementation ...
   const tutor = await prisma.tutorProfile.findFirst({
     where: { userId: id },
     include: {

@@ -46,10 +46,26 @@ const updateUserStatus = async (req: Request, res: Response) => {
       return;
     }
 
-    const result = await UserService.updateUserStatus(userId, status);
+    const result = await UserService.updateUserStatus(userId as string, status);
     res.status(200).json({
       success: true,
       message: "User status updated successfully",
+      data: result,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message || "Something went wrong",
+    });
+  }
+};
+
+const getAdminStats = async (req: Request, res: Response) => {
+  try {
+    const result = await UserService.getAdminStats();
+    res.status(200).json({
+      success: true,
+      message: "Admin stats retrieved successfully",
       data: result,
     });
   } catch (err: any) {
@@ -64,4 +80,5 @@ export const UserController = {
   getAllUsers,
   getMyProfile,
   updateUserStatus,
+  getAdminStats,
 };

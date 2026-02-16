@@ -21,12 +21,10 @@ interface TutorProfileSetup {
 const registerUser = async (data: RegisterData) => {
     const { name, email, password, role, phone } = data;
 
-    // Validate role (only STUDENT and TUTOR can register via API)
     if (role !== UserRole.STUDENT && role !== UserRole.TUTOR) {
         throw new Error("Invalid role. Only STUDENT and TUTOR roles are allowed for registration.");
     }
 
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
         where: { email }
     });
@@ -35,7 +33,6 @@ const registerUser = async (data: RegisterData) => {
         throw new Error("User with this email already exists");
     }
 
-    // Register using Better-Auth
     const response = await auth.api.signUpEmail({
         body: {
             email,
@@ -50,13 +47,11 @@ const registerUser = async (data: RegisterData) => {
         throw new Error("Registration failed");
     }
 
-    // Auto-verify email (email verification disabled for now)
     await prisma.user.update({
         where: { email },
         data: { emailVerified: true }
     });
 
-    // Get the created user
     const user = await prisma.user.findUnique({
         where: { email },
         select: {
@@ -80,7 +75,6 @@ const registerUser = async (data: RegisterData) => {
 };
 
 const setupTutorProfile = async (userId: string, profileData: TutorProfileSetup) => {
-    // Verify user is a tutor
     const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { role: true, emailVerified: true }
@@ -94,7 +88,6 @@ const setupTutorProfile = async (userId: string, profileData: TutorProfileSetup)
         throw new Error("Only tutors can create a tutor profile");
     }
 
-    // Check if profile already exists
     const existingProfile = await prisma.tutorProfile.findUnique({
         where: { userId }
     });
@@ -103,7 +96,6 @@ const setupTutorProfile = async (userId: string, profileData: TutorProfileSetup)
         throw new Error("Tutor profile already exists. Use update profile endpoint instead.");
     }
 
-    // Validate categories
     if (!profileData.categoryIds || profileData.categoryIds.length === 0) {
         throw new Error("At least one category must be selected");
     }

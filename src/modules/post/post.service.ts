@@ -243,11 +243,6 @@ const updatePost = async (postId: string, data: Partial<Post>, authorId: string,
 
 }
 
-//** 
-// 1. user - nijar created post delete korta parbe
-// 2. admin - sobar post delete korta parbe
-// */
-
 const deletePost = async (postId: string, authorId: string, isAdmin: boolean) => {
     const postData = await prisma.post.findUniqueOrThrow({
         where: {

@@ -11,7 +11,6 @@ const createReview = async (studentId: string, payload: any) => {
         throw new Error("Rating must be between 1 and 5");
     }
 
-    // Check if tutor exists
     const tutor = await prisma.user.findUnique({
         where: { id: payload.tutorId }
     });
@@ -24,7 +23,6 @@ const createReview = async (studentId: string, payload: any) => {
         throw new Error("User is not a tutor");
     }
 
-    // Check if student has completed a booking with this tutor
     const completedBooking = await prisma.booking.findFirst({
         where: {
             studentId,
@@ -37,7 +35,6 @@ const createReview = async (studentId: string, payload: any) => {
         throw new Error("You can only review tutors you have had completed sessions with");
     }
 
-    // Check for duplicate review
     const existingReview = await prisma.review.findFirst({
         where: {
             studentId,
@@ -49,7 +46,6 @@ const createReview = async (studentId: string, payload: any) => {
         throw new Error("You have already reviewed this tutor");
     }
 
-    // Create the review
     return await prisma.review.create({
         data: {
             studentId,

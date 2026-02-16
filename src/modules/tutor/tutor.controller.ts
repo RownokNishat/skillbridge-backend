@@ -19,7 +19,7 @@ const getAllTutors = async (req: Request, res: Response) => {
 
 const getTutorById = async (req: Request, res: Response) => {
   try {
-    const id = req.params.id;
+    const id = req.params.id as string;
     if (!id) {
       res.status(400).json({ success: false, message: "ID is required" });
       return;
@@ -115,7 +115,7 @@ const getMySessions = async (req: Request, res: Response) => {
 
 const markSessionComplete = async (req: Request, res: Response) => {
   try {
-    const bookingId = parseInt(req.params.id);
+    const bookingId = parseInt(req.params.id as string);
     if (!bookingId) {
       res
         .status(400)
@@ -173,7 +173,7 @@ const getFeaturedTutors = async (_req: Request, res: Response) => {
 
 const acceptSession = async (req: Request, res: Response) => {
   try {
-    const bookingId = parseInt(req.params.id);
+    const bookingId = parseInt(req.params.id as string);
     const result = await TutorService.acceptSession(req.user!.id, bookingId);
     res.status(200).json({
       success: true,
@@ -187,7 +187,7 @@ const acceptSession = async (req: Request, res: Response) => {
 
 const cancelSession = async (req: Request, res: Response) => {
   try {
-    const bookingId = parseInt(req.params.id);
+    const bookingId = parseInt(req.params.id as string);
     const result = await TutorService.cancelSession(req.user!.id, bookingId);
     res.status(200).json({
       success: true,

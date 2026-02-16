@@ -36,7 +36,7 @@ const createBooking = async (studentId: string, payload: any) => {
     where: {
       tutorId: payload.tutorId,
       status: {
-        in: ["PENDING", "CONFIRMED"],
+        in: ["CONFIRMED"],
       },
       OR: [
         {
@@ -68,7 +68,7 @@ const createBooking = async (studentId: string, payload: any) => {
       tutorId: payload.tutorId,
       startTime,
       endTime,
-      status: "PENDING",
+      status: "CONFIRMED", // Instant confirmation as per requirements
     },
     include: {
       tutor: {
@@ -99,7 +99,6 @@ const getAllBookings = async () => {
           id: true,
           name: true,
           email: true,
-          // 1. Select the profile relation instead of the direct field
           tutorProfile: {
             select: {
               hourlyRate: true,
@@ -113,9 +112,6 @@ const getAllBookings = async () => {
     },
   });
 
-  // 2. Map the results to flatten the structure
-  // This ensures your frontend receives { tutor: { hourlyRate: 50 } }
-  // instead of { tutor: { tutorProfile: { hourlyRate: 50 } } }
   const flattenedBookings = bookings.map((booking: any) => ({
     ...booking,
     tutor: {

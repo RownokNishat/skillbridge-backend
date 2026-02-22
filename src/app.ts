@@ -17,18 +17,37 @@ import { StudentRouter } from "./modules/student/student.router";
 
 const app = express();
 
+const allowedOrigins = new Set(
+  [
+    process.env.APP_URL,
+    process.env.FRONTEND_URL,
+    process.env.CORS_ORIGINS,
+    "http://localhost:3000",
+    "https://skillbridge-frontend-dun.vercel.app",
+  ]
+    .flatMap((value) => (value ? value.split(",") : []))
+    .map((value) => value.trim())
+    .filter(Boolean),
+);
+
 // Connect to database on cold start
 prisma.$connect().catch(console.error);
 
 app.use(
   cors({
-    origin: process.env.APP_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Origin not allowed by CORS"));
+    },
     credentials: true,
   }),
 );
 
 app.use(express.json());
 
+app.options("/api/auth/*", cors());
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use("/api", RegistrationRouter);

@@ -13,12 +13,25 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const trustedOrigins = new Set(
+  [
+    process.env.APP_URL,
+    process.env.FRONTEND_URL,
+    process.env.TRUSTED_ORIGINS,
+    "http://localhost:3000",
+    "https://skillbridge-frontend-dun.vercel.app",
+  ]
+    .flatMap((value) => (value ? value.split(",") : []))
+    .map((value) => value.trim())
+    .filter(Boolean),
+);
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql", // or "mysql", "postgresql", ...etc
   }),
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
-  trustedOrigins: [process.env.APP_URL!],
+  trustedOrigins: Array.from(trustedOrigins),
   advanced: {
     useSecureCookies: false, // Set to false for localhost
     cookiePrefix: "better-auth",

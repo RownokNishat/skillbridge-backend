@@ -2,7 +2,7 @@ import express from 'express';
 import { RegistrationController } from './registration.controller';
 import auth, { UserRole } from '../../middlewares/auth';
 
-const router = express.Router();
+const router: express.Router = express.Router();
 
 // Public registration endpoint
 router.post('/register', RegistrationController.register);

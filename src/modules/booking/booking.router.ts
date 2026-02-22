@@ -2,7 +2,7 @@ import express from "express";
 import { BookingController } from "./booking.controller";
 import auth, { UserRole } from "../../middlewares/auth";
 
-const router = express.Router();
+const router: express.Router = express.Router();
 
 router.post("/", auth(UserRole.STUDENT), BookingController.createBooking);
 router.get(

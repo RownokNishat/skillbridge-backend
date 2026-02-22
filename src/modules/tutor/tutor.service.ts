@@ -67,7 +67,7 @@ const getAllTutors = async (query: any) => {
 
       const averageRating =
         reviews.length > 0
-          ? reviews.reduce((sum, review) => sum + review.rating, 0) /
+          ? reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) /
             reviews.length
           : 0;
 
@@ -82,12 +82,12 @@ const getAllTutors = async (query: any) => {
   if (minRating) {
     const minRatingVal = Number(minRating);
     tutorsWithRatings = tutorsWithRatings.filter(
-      (tutor) => tutor.averageRating >= minRatingVal,
+      (tutor: { averageRating: number }) => tutor.averageRating >= minRatingVal,
     );
   }
 
   if (sortBy === "rating") {
-    tutorsWithRatings.sort((a, b) => {
+    tutorsWithRatings.sort((a: { averageRating: number }, b: { averageRating: number }) => {
       if (sortOrder === "asc") {
         return a.averageRating - b.averageRating;
       } else {
@@ -135,7 +135,7 @@ const getTutorById = async (id: string) => {
 
   const averageRating =
     reviews.length > 0
-      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      ? reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) / reviews.length
       : 0;
 
   return {
@@ -354,7 +354,7 @@ const getDashboardStats = async (userId: string) => {
   });
   const averageRating =
     reviews.length > 0
-      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      ? reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) / reviews.length
       : 0;
 
   const recentSessions = await prisma.booking.findMany({
@@ -391,7 +391,7 @@ const getDashboardStats = async (userId: string) => {
   });
 
   const hourlyRate = tutorProfile?.hourlyRate || 0;
-  const totalEarnings = completedBookings.reduce((sum, booking) => {
+  const totalEarnings = completedBookings.reduce((sum: number, booking: { startTime: Date; endTime: Date }) => {
     const hours =
       (booking.endTime.getTime() - booking.startTime.getTime()) /
       (1000 * 60 * 60);
@@ -429,7 +429,7 @@ const getFeaturedTutors = async () => {
   });
 
   const tutorsWithRatings = await Promise.all(
-    tutors.map(async (tutor) => {
+    tutors.map(async (tutor: { userId: string }) => {
       const reviews = await prisma.review.findMany({
         where: { tutorId: tutor.userId },
         select: { rating: true },
@@ -437,7 +437,7 @@ const getFeaturedTutors = async () => {
 
       const averageRating =
         reviews.length > 0
-          ? reviews.reduce((sum, review) => sum + review.rating, 0) /
+          ? reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) /
             reviews.length
           : 0;
 
@@ -450,7 +450,7 @@ const getFeaturedTutors = async () => {
   );
 
   const featuredTutors = tutorsWithRatings
-    .sort((a, b) => {
+    .sort((a: { averageRating: number; totalReviews: number }, b: { averageRating: number; totalReviews: number }) => {
       if (b.averageRating !== a.averageRating) {
         return b.averageRating - a.averageRating;
       }

@@ -1,8 +1,8 @@
-import express from "express";
+import express, { Router } from "express";
 import { StudentController } from "./student.controller";
 import auth, { UserRole } from "../../middlewares/auth";
 
-const router: express.Router = express.Router();
+const router: Router = express.Router();
 
 // Student routes
 router.get("/student/profile", auth(UserRole.STUDENT), StudentController.getMyProfile);

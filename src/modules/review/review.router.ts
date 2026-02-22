@@ -1,8 +1,8 @@
-import express from 'express';
+import express, { Router } from 'express';
 import { ReviewController } from './review.controller';
 import auth, { UserRole } from '../../middlewares/auth';
 
-const router: express.Router = express.Router();
+const router: Router = express.Router();
 
 router.post('/', auth(UserRole.STUDENT), ReviewController.createReview);
 

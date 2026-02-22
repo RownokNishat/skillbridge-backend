@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { postService } from "./post.service";
-import { PostStatus } from "../../../generated/prisma/enums";
+import { PostStatus } from "@prisma/client";
 import paginationSortingHelper from "../../helpers/paginationSortingHelper";
 import { UserRole } from "../../middlewares/auth";
 

@@ -1,5 +1,4 @@
-import { CommentStatus, Post, PostStatus } from "../../../generated/prisma/client";
-import { PostWhereInput } from "../../../generated/prisma/models";
+import { CommentStatus, Post, PostStatus, Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 
 const createPost = async (data: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'authorId'>, userId: string) => {
@@ -35,7 +34,7 @@ const getAllPost = async ({
     sortBy: string,
     sortOrder: string
 }) => {
-    const andConditions: PostWhereInput[] = []
+    const andConditions: Prisma.PostWhereInput[] = []
 
     if (search) {
         andConditions.push({

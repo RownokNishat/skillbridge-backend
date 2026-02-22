@@ -1,4 +1,4 @@
-import express, { Application } from "express";
+import express from "express";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import cors from "cors";
@@ -15,7 +15,7 @@ import { AuthRouter } from "./modules/auth/auth.router";
 import { RegistrationRouter } from "./modules/registration/registration.router";
 import { StudentRouter } from "./modules/student/student.router";
 
-const app: Application = express();
+const app = express();
 
 // Connect to database on cold start
 prisma.$connect().catch(console.error);

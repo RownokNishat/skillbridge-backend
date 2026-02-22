@@ -1,8 +1,8 @@
-import express from "express";
+import express, { Router } from "express";
 import { CategoryController } from "./category.controller";
 import auth, { UserRole } from "../../middlewares/auth";
 
-const router: express.Router = express.Router();
+const router: Router = express.Router();
 
 // Public route to view categories
 router.get("/categories", CategoryController.getAllCategories);

@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "postinstall": "prisma generate",
     "build": "prisma generate && prisma db push --force-reset && tsc && npx tsx src/scripts/seedAdmin.ts && npx tsx src/scripts/seedData.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx tsx watch src/server.ts",

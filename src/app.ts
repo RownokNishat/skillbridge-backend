@@ -4,6 +4,7 @@ import { auth } from "./lib/auth";
 import cors from "cors";
 import errorHandler from "./middlewares/globalErrorHandler";
 import { notFound } from "./middlewares/notFound";
+import { prisma } from "./lib/prisma";
 
 import { UserRouter } from "./modules/user/user.router";
 import { TutorRouter } from "./modules/tutor/tutor.router";
@@ -15,6 +16,9 @@ import { RegistrationRouter } from "./modules/registration/registration.router";
 import { StudentRouter } from "./modules/student/student.router";
 
 const app: Application = express();
+
+// Connect to database on cold start
+prisma.$connect().catch(console.error);
 
 app.use(
   cors({

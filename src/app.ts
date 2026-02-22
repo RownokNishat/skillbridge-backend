@@ -30,13 +30,29 @@ const allowedOrigins = new Set(
     .filter(Boolean),
 );
 
+const isAllowedOrigin = (origin?: string) => {
+  if (!origin) {
+    return true;
+  }
+
+  if (allowedOrigins.has(origin)) {
+    return true;
+  }
+
+  // Allow SkillBridge frontend preview deployments on Vercel.
+  return (
+    origin.startsWith("https://skillbridge-frontend-") &&
+    origin.endsWith(".vercel.app")
+  );
+};
+
 // Connect to database on cold start
 prisma.$connect().catch(console.error);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.has(origin)) {
+      if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
       return callback(new Error("Origin not allowed by CORS"));

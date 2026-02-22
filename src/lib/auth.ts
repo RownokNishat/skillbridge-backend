@@ -26,6 +26,9 @@ const trustedOrigins = new Set(
     .filter(Boolean),
 );
 
+// Allow SkillBridge frontend preview deployments on Vercel.
+trustedOrigins.add("https://skillbridge-frontend-*.vercel.app");
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql", // or "mysql", "postgresql", ...etc

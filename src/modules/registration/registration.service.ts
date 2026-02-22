@@ -40,7 +40,7 @@ const registerUser = async (data: RegisterData) => {
             name,
             role,
             phone: phone || undefined
-        }
+        } as any
     });
 
     if (!response) {

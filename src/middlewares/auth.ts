@@ -43,7 +43,7 @@ const auth = (...roles: UserRole[]) => {
                 id: session.user.id,
                 email: session.user.email,
                 name: session.user.name,
-                role: session.user.role as string,
+                role: (session.user as any).role as string,
                 emailVerified: session.user.emailVerified
             }
 

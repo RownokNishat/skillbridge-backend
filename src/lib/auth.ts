@@ -49,7 +49,7 @@ export const auth = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
-    sendVerificationEmail: async ({ user, url, token }, request) => {
+    sendVerificationEmail: async ({ user, url, token }: { user: { email: string; name: string }; url: string; token: string }, request?: Request) => {
       try {
         const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`
         const info = await transporter.sendMail({

@@ -29,7 +29,7 @@ async function seedAdmin() {
                 password: adminData.password,
                 name: adminData.name,
                 role: adminData.role
-            }
+            } as any
         });
 
         if (res) {

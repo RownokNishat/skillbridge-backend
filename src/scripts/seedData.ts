@@ -26,7 +26,7 @@ async function seedData() {
                     password: adminData.password,
                     name: adminData.name,
                     role: adminData.role
-                }
+                } as any
             });
 
             if (adminRes) {
@@ -201,7 +201,7 @@ async function seedData() {
                         password: tutorData.password,
                         name: tutorData.name,
                         role: UserRole.TUTOR
-                    }
+                    } as any
                 });
 
                 if (tutorRes) {
@@ -265,7 +265,7 @@ async function seedData() {
                         password: studentData.password,
                         name: studentData.name,
                         role: UserRole.STUDENT
-                    }
+                    } as any
                 });
 
                 if (studentRes) {

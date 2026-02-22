@@ -59,7 +59,7 @@ const getAllTutors = async (query: any) => {
   });
 
   let tutorsWithRatings = await Promise.all(
-    tutors.map(async (tutor) => {
+    tutors.map(async (tutor: typeof tutors[number]) => {
       const reviews = await prisma.review.findMany({
         where: { tutorId: tutor.userId },
         select: { rating: true },

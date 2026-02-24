@@ -1,6 +1,0 @@
-### Test Get Session Endpoint
-# Replace YOUR_SESSION_TOKEN with the actual token from your cookies
-GET http://localhost:5000/api/get-session
-Authorization: Bearer Hl4fofC1Aw1TQ7Ljt7LY9qdawCVRSB2y
-
-###

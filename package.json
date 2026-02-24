@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "postinstall": "prisma generate",
     "build": "prisma generate && prisma db push --force-reset && tsc && npx tsx src/scripts/seedAdmin.ts && npx tsx src/scripts/seedData.ts",

@@ -72,7 +72,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 app.options(/.*/, cors(corsOptions));
-app.all("/api/auth/*splat", toNodeHandler(auth));
+app.all("/api/auth/*", toNodeHandler(auth));
 
 app.use("/api", RegistrationRouter);
 app.use("/api", AuthRouter);

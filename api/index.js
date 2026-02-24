@@ -93868,7 +93868,7 @@ var corsOptions = {
 app.use((0, import_cors.default)(corsOptions));
 app.use(import_express9.default.json());
 app.options(/.*/, (0, import_cors.default)(corsOptions));
-app.all("/api/auth/*splat", toNodeHandler2(auth));
+app.all("/api/auth/*", toNodeHandler2(auth));
 app.use("/api", RegistrationRouter);
 app.use("/api", AuthRouter);
 app.use("/api", UserRouter);

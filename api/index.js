@@ -91684,9 +91684,12 @@ var auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
   trustedOrigins: Array.from(trustedOrigins),
   advanced: {
-    useSecureCookies: false,
-    // Set to false for localhost
-    cookiePrefix: "better-auth"
+    useSecureCookies: process.env.NODE_ENV === "production",
+    cookiePrefix: "better-auth",
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: process.env.NODE_ENV === "production"
+    }
   },
   user: {
     additionalFields: {

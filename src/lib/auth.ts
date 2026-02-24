@@ -13,11 +13,16 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const vercelOrigin = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : undefined;
+
 const trustedOrigins = new Set(
   [
     process.env.APP_URL,
     process.env.FRONTEND_URL,
     process.env.TRUSTED_ORIGINS,
+    vercelOrigin,
     "http://localhost:3000",
     "https://skillbridge-frontend-dun.vercel.app",
   ]
@@ -26,8 +31,6 @@ const trustedOrigins = new Set(
     .filter(Boolean),
 );
 
-// Allow SkillBridge frontend preview deployments on Vercel.
-trustedOrigins.add("https://skillbridge-frontend-*.vercel.app");
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {

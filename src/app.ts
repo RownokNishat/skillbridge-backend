@@ -17,11 +17,16 @@ import { StudentRouter } from "./modules/student/student.router";
 
 const app = express();
 
+const vercelOrigin = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : undefined;
+
 const allowedOrigins = new Set(
   [
     process.env.APP_URL,
     process.env.FRONTEND_URL,
     process.env.CORS_ORIGINS,
+    vercelOrigin,
     "http://localhost:3000",
     "https://skillbridge-frontend-dun.vercel.app",
   ]
@@ -49,21 +54,24 @@ const isAllowedOrigin = (origin?: string) => {
 // Connect to database on cold start
 prisma.$connect().catch(console.error);
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (isAllowedOrigin(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Origin not allowed by CORS"));
-    },
-    credentials: true,
-  }),
-);
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Origin not allowed by CORS"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  maxAge: 86400,
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
-app.options("/api/auth/*", cors());
+app.options("*", cors(corsOptions));
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use("/api", RegistrationRouter);
